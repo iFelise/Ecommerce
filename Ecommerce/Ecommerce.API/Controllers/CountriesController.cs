@@ -44,16 +44,33 @@ namespace Ecommerce.API.Controllers
         [HttpGet]
         public async Task<ActionResult> Get()
         {
-            return Ok(await _context.Countries.ToListAsync());
+            return Ok(await _context.Countries.Include(c => c.States).ToListAsync());
         }
 
         [HttpPost]
 
         public async Task<ActionResult> Post(Country country)
         {
-            _context.Add(country);
-            await _context.SaveChangesAsync();
-            return Ok(country);
+            try
+            {
+                _context.Update(country);
+                await _context.SaveChangesAsync();
+                return Ok(country);
+            }
+
+            catch (DbUpdateException update)
+            {
+                if (update.InnerException.Message.Contains("duplicate")) return BadRequest("Ya hay un registro con el mismo Nombre");
+
+                return BadRequest(update.InnerException.Message);
+            }
+
+            catch (Exception ex)
+            {
+
+                return BadRequest(ex.Message);
+            }
+            ;
         }
     } 
 }

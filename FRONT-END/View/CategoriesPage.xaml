@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewmodels="clr-namespace:FRONT_END.ViewModels"
+             xmlns:entities="clr-namespace:LIBRARY.Shared.DTO.CategoryDTO;assembly=LIBRARY.Shared"
+             xmlns:converters="clr-namespace:FRONT_END.Converters"
+             x:Class="FRONT_END.View.CategoriesPage"
+             x:Name="CategoriesView"
+             Title="Gestión de Categorías">
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <converters:StringNotEmptyConverter x:Key="StringNotEmptyConverter" />
+            <converters:IsNotNullConverter x:Key="IsNotNullConverter" />
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="Auto,Auto,Auto,*,Auto" Padding="20" RowSpacing="15">
+
+        <!-- Fila superior: Agregar categoría + Recargar -->
+        <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10">
+            <Entry Placeholder="Nombre de categoría"
+                   Text="{Binding NewCategoryName}"
+                   MaxLength="100"
+                   Grid.Column="0" />
+            <Button Text="Agregar" 
+                    Command="{Binding AddCategoryCommand}"
+                    Grid.Column="1"
+                    BackgroundColor="Green"
+                    TextColor="White" />
+            <Button Text="Recargar" 
+                    Command="{Binding LoadCategoriesCommand}"
+                    Grid.Column="2"
+                    BackgroundColor="Blue"
+                    TextColor="White" />
+        </Grid>
+
+        <!-- Campo de descripción -->
+        <Entry Grid.Row="1"
+               Placeholder="Descripción"
+               Text="{Binding NewCategoryDescription}"
+               MaxLength="500"/>
+
+        <!-- Mensaje de error -->
+        <Label Grid.Row="2" 
+               Text="{Binding ErrorMessage}" 
+               TextColor="Red"
+               IsVisible="{Binding ErrorMessage, Converter={StaticResource StringNotEmptyConverter}}" />
+
+        <!-- Lista de categorías -->
+        <RefreshView Grid.Row="3" 
+                     Command="{Binding LoadCategoriesCommand}"
+                     IsRefreshing="{Binding IsBusy}">
+            <CollectionView ItemsSource="{Binding Categories}"
+                           SelectionMode="Single"
+                           SelectedItem="{Binding SelectedCategory}"
+                           SelectionChangedCommand="{Binding OnCategorySelectedCommand}">
+                <CollectionView.EmptyView>
+                    <StackLayout VerticalOptions="Center" HorizontalOptions="Center">
+                        <Label Text="No hay categorías disponibles" FontSize="Medium" TextColor="Black" />
+                        <Button Text="Recargar" Command="{Binding LoadCategoriesCommand}" 
+                                HorizontalOptions="Center" Margin="0,10,0,0" />
+                    </StackLayout>
+                </CollectionView.EmptyView>
+
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="entities:CategoryResponseDto">
+                        <SwipeView>
+                            <SwipeView.RightItems>
+                                <SwipeItems>
+                                    <SwipeItem Text="Editar"
+                                               BackgroundColor="Orange"
+                                               Command="{Binding BindingContext.EditCategoryCommand, Source={x:Reference CategoriesView}}"
+                                               CommandParameter="{Binding .}" />
+                                    <SwipeItem Text="Eliminar"
+                                               BackgroundColor="Red"
+                                               Command="{Binding BindingContext.DeleteCategoryCommand, Source={x:Reference CategoriesView}}"
+                                               CommandParameter="{Binding .}" />
+                                </SwipeItems>
+                            </SwipeView.RightItems>
+                            <Grid Padding="10">
+                                <Frame BorderColor="LightGray" CornerRadius="5" Padding="10">
+                                    <StackLayout>
+                                        <Label Text="{Binding Name}" FontAttributes="Bold" FontSize="Medium" />
+                                        <Label Text="{Binding Description}" TextColor="Gray" FontSize="Small" />
+                                        <Label Text="{Binding ProdCategoriesNumber, StringFormat='Subcategorías: {0}'}" TextColor="Gray" />
+                                    </StackLayout>
+                                </Frame>
+                            </Grid>
+                        </SwipeView>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </RefreshView>
+
+        <!-- Botones para categoría seleccionada -->
+        <Grid Grid.Row="4" ColumnDefinitions="*,*,*" ColumnSpacing="10" 
+              IsVisible="{Binding SelectedCategory, Converter={StaticResource IsNotNullConverter}}">
+            <Button Text="Actualizar" 
+                    Command="{Binding UpdateCategoryCommand}"
+                    Grid.Column="0"
+                    BackgroundColor="Orange"
+                    TextColor="White" />
+            <Button Text="Eliminar" 
+                    Command="{Binding DeleteCategoryCommand}"
+                    CommandParameter="{Binding SelectedCategory}"
+                    Grid.Column="1"
+                    BackgroundColor="Red"
+                    TextColor="White" />
+            <Button Text="Cancelar" 
+                    Command="{Binding CancelCommand}"
+                    Grid.Column="2"
+                    BackgroundColor="Gray"
+                    TextColor="White" />
+        </Grid>
+    </Grid>
+</ContentPage>
